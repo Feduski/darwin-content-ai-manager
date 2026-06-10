@@ -64,20 +64,15 @@ export async function listCorpus() {
   return request("/brand/corpus");
 }
 
-export async function addCorpusText(content: string) {
-  const form = new FormData();
-  form.append("content", content);
-  const res = await fetch(`${BASE}/brand/corpus/text`, { method: "POST", body: form });
-  if (!res.ok) throw new Error(res.statusText);
-  return res.json();
+export interface CorpusItemCreate {
+  source: string;
+  source_url?: string;
+  text: string;
+  notes?: string;
 }
 
-export async function addCorpusImage(file: File) {
-  const form = new FormData();
-  form.append("file", file);
-  const res = await fetch(`${BASE}/brand/corpus/image`, { method: "POST", body: form });
-  if (!res.ok) throw new Error(res.statusText);
-  return res.json();
+export async function addCorpusItem(item: CorpusItemCreate) {
+  return request("/brand/corpus", { method: "POST", body: JSON.stringify(item) });
 }
 
 export async function deleteCorpusItem(id: number) {

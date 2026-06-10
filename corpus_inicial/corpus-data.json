@@ -1,0 +1,61 @@
+{
+  "brand_corpus": [
+    {
+      "id": "linkedin_1",
+      "source": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/getdarwinai_jpmorgan-activity-7468639981025107968-Orhf?utm_source=share&utm_medium=member_desktop&rcm=ACoAADOyCi0Bd3d5uynIms3xliTVCncTbq2WvPw",
+      "text": "🏦🤖 Jamie Dimon afirmou que o JPMorgan Chase contratará mais especialistas em IA enquanto reduz algumas funções bancárias tradicionais à medida que a automação avança pela empresa.\n💡 Atualmente, o JPMorgan já utiliza IA em áreas como:\n• detecção de fraudes\n\n• atendimento ao cliente\n• engenharia de software\n• pesquisa de mercado\n\n• operações internas\n⚡ o que o torna um dos bancos mais avançados na adoção de IA.\nA mudança reflete uma nova demanda por profissionais, com maior foco em:\n\n• engenheiros\n• infraestrutura de dados\n• implementação de IA\ne menor necessidade de determinadas funções manuais e repetitivas. \n🤯 Segundo Dimon, o objetivo não é simplesmente substituir funcionários, mas aumentar a produtividade e transformar a maneira como o trabalho é realizado dentro da organização.\nFonte: Bloomberg",
+      "image_file": "linkedin/post_2.jpeg",
+      "notes": "Tendência, tom informativo, CTA a link para artigo completo"
+    },
+    {
+      "id": "linkedin_2",
+      "source": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/getdarwinai_microsoft-activity-7465374577011929089-wba8?utm_source=share&utm_medium=member_desktop&rcm=ACoAADOyCi0Bd3d5uynIms3xliTVCncTbq2WvPw",
+      "text": "🚨 Según informes, Microsoft canceló las licencias internas de Claude Code después de que la facturación por uso de tokens se volviera demasiado costosa.💡 Y eso llama la atención porque Microsoft ya invirtió US$13 mil millones en OpenAI y sigue impulsando gran parte de la infraestructura de IA con Azure.⚠️ Pero el punto más importante es otro:La IA empieza a volverse muy costosa a gran escala.Según el reporte:• Uber habría gastado todo su presupuesto de IA para 2026 en solo 4 meses• los precios del software de IA ya habrían subido entre 20% y 37%• y GitHub también se mueve hacia precios basados en uso🤯 La industria está descubriendo que entrenar modelos es caro… pero usarlos masivamente puede ser todavía más costoso.Fuente: The Verge",
+      "image_file": "linkedin/post_2.jpeg",
+      "notes": "Tono educativo, CTA a webinar"
+    },
+    {
+      "id": "linkedin_3",
+      "source": "linkedin",
+      "source_url": "https://www.linkedin.com/posts/cybersecurity-ugcPost-7466101598440644608-CxjJ",
+      "text": "🔐🤖 Anthropic is using cybersecurity as one of the first serious tests of whether AI agents can handle work that normally takes expert security teams weeks.💡 The important signal is not just how many bugs Mythos Preview finds… but where it is being tested.According to reports, the system has already been evaluated across:• Cloudflare• Mozilla• open-source projects• critical infrastructure systems• and government-level security environments⚡ For companies like Cloudflare and Mozilla, faster vulnerability detection means reducing the window before attackers can exploit the same weaknesses.🤯 And that raises a much bigger question: If tools like Mythos keep improving, security testing may shift from occasional audits… to constant AI-assisted monitoring. Source: Anthropic",
+      "image_file": "linkedin/post_3.jpeg",
+      "notes": "Tendencia, tono informativo, CTA a link para artículo completo"
+    },
+
+    {
+      "id": "post_1",
+      "source": "instagram",
+      "source_url": "https://www.instagram.com/p/DZVtZoODdMa/",
+      "text":"El autocorrector nunca se equivoca. 😉 Si tu negocio está pidiendo a gritos optimizar procesos, la respuesta está al alcance de tus manos (literalmente). Dejemos que la tecnología haga el trabajo pesado para que tú te enfoques en crecer. 🚀 ¿Qué es lo primero que automatizarías hoy? Cuéntanos abajo. 👇",
+      "image_file": "instagram/post1.jpg",
+      "notes": "Divertido, tono conversacional, CTA a comentarios para generar interacción"
+    },
+    {
+      "id": "post_2",
+      "source": "instagram",
+      "source_url": "https://www.instagram.com/p/DZN_A6_jfyq/",
+      "text": "A veces, las respuestas que buscamos están justo frente a nosotros... o en las nubes. 😉☁️ ¿Qué es lo que más te apasiona de tu trabajo y te gustaría tener más tiempo para hacer? Te leemos en los comentarios. 👇",
+      "image_file": "instagram/post2.jpg",
+      "notes": "Difusión de marca"
+    },
+    {
+      "id": "post_3",
+      "source": "instagram",
+      "source_url": "https://www.instagram.com/p/DYafLQll05F/?img_index=1",
+      "text": "¿Cambiando figuritas en la oficina en vez de trabajar? 👀 Te bancamos. En Darwin AI ya llenamos el álbum con el equipo que sí te va a dar resultados (y no repetidas de Sudáfrica). Ventas, CX y cobranzas, todo cubierto. Salgamos a la cancha antes de que empiece el Mundial. 🏆⚽ Link en bio.",
+      "image_file": "instagram/post3.jpg",
+      "notes": "Tendencia, tono divertido, CTA a link en bio para generar tráfico"
+    },
+        {
+      "id": "post_4",
+      "source": "instagram",
+      "source_url": "https://www.instagram.com/p/DWnC9RTAup5/?img_index=1",
+      "text": "¿Tu competencia usa Darwin AI? No lo sabemos. Pero que están usando IA para ganarte clientes, es un hecho. ⚡️Tener un chatbot es una cosa, pero saber usar la IA con estrategia es lo que separa a los que solo están de los que dominan el mercado. Mientras tú lo piensas, ellos están: ✅ Respondiendo en segundos. ✅ Calificando leads 24/7. ✅ Escalando sin contratar más personal. La pregunta no es si la IA funciona, sino ¿te vas a quedar atrás viendo cómo ellos crecen? 🔗 No dejes que te saquen ventaja. Empieza hoy con Darwin en el link de la bio. #DarwinAi #EstrategiaDigital #InteligenciaArtificial #Ventas247 #GrowthHacking #Automatizacion",
+      "image_file": "instagram/post4.jpg",
+      "notes": "Formato tip/educativo. Tono urgente, CTA a link en bio. Carrusel."
+    }
+  ]
+}

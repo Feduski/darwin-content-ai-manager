@@ -4,11 +4,6 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Enum as SA
 from database import Base
 
 
-class ItemType(str, enum.Enum):
-    text = "text"
-    image = "image"
-
-
 class OutputType(str, enum.Enum):
     text = "text"
     image = "image"
@@ -25,9 +20,11 @@ class BrandCorpus(Base):
     __tablename__ = "brand_corpus"
 
     id = Column(Integer, primary_key=True, index=True)
-    type = Column(SAEnum(ItemType), nullable=False)
-    content = Column(Text, nullable=False)          # raw text or file path
-    style_description = Column(Text, nullable=True)  # cached vision analysis
+    source = Column(String(50), nullable=False)      # "instagram" | "linkedin" | "manual"
+    source_url = Column(String, nullable=True)
+    text = Column(Text, nullable=False)
+    image_path = Column(String, nullable=True)       # relativo a corpus_inicial/
+    notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

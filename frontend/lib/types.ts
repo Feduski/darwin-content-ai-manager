@@ -30,8 +30,10 @@ export interface BrandConfig {
 
 export interface BrandCorpusItem {
   id: number;
-  type: ItemType;
-  content: string;
-  style_description: string | null;
+  source: string;
+  source_url: string | null;
+  text: string;
+  image_path: string | null;
+  notes: string | null;
   created_at: string;
 }

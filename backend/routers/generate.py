@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.models import BrandConfig, BrandCorpus, Generation, GenerationStatus, OutputType
+from providers.gemini_image_provider import get_image_provider
 from providers.text_provider import get_text_provider
 from services.concept_extractor import ConceptExtractor
 from services.prompt_builder import PromptBuilder
@@ -60,12 +61,17 @@ class GenerationOut(BaseModel):
 
 @router.post("/generate", response_model=GenerationOut)
 async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
-    if request.output_type == "image":
-        raise HTTPException(status_code=501, detail="Generación de imágenes disponible en Fase 3")
+    from pathlib import Path
+    GENERATED_DIR = Path(__file__).parent.parent.parent / "storage" / "generated"
 
-    # Inicializar provider (valida que la key exista)
+    # Inicializar providers según output_type
     try:
-        provider = get_text_provider()
+        text_provider = get_text_provider() if request.output_type in ("text", "both") else None
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
+        image_provider = get_image_provider() if request.output_type in ("image", "both") else None
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -77,14 +83,17 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
     # Corpus: últimos 4 ejemplos para few-shot
     corpus = db.query(BrandCorpus).order_by(BrandCorpus.created_at.desc()).limit(4).all()
 
-    # Extraer concepto de cada item de inspiración
+    # Extraer concepto de inspiración (siempre necesita text provider)
     items_dicts = [{"type": i.type, "content": i.content} for i in request.inspo_items]
     try:
-        concept = await ConceptExtractor(provider).extract_items(items_dicts)
+        extractor_provider = text_provider or get_text_provider()
+        concept = await ConceptExtractor(extractor_provider).extract_items(items_dicts)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Error al extraer concepto: {e}")
 
-    # Armar prompt con las tres capas de contexto de marca
+    # Armar prompt
     builder = PromptBuilder()
     prompt = builder.build(
         concept=concept,
@@ -96,11 +105,20 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
 
     # Generar texto
     output_text: Optional[str] = None
-    if request.output_type in ("text", "both"):
+    if text_provider is not None:
         try:
-            output_text = await provider.complete(prompt)
+            output_text = await text_provider.complete(prompt)
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"Error al generar texto: {e}")
+
+    # Generar imagen
+    output_image_path: Optional[str] = None
+    if image_provider is not None:
+        image_prompt = output_text or concept
+        try:
+            output_image_path = await image_provider.generate_image(image_prompt, GENERATED_DIR)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"Error al generar imagen: {e}")
 
     # Persistir generación
     gen = Generation(
@@ -109,7 +127,7 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
         extracted_concept=concept,
         output_type=OutputType(request.output_type),
         output_text=output_text,
-        output_image_path=None,
+        output_image_path=output_image_path,
         status=GenerationStatus.pending,
     )
     db.add(gen)

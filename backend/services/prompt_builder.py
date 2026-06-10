@@ -4,10 +4,10 @@ from models.models import BrandConfig, BrandCorpus
 
 
 def _format_corpus_example(entry: BrandCorpus, index: int) -> str:
-    if entry.type == "text":
-        return f"Ejemplo {index}:\n{entry.content}"
-    description = entry.style_description or "(imagen sin descripción)"
-    return f"Ejemplo {index} (imagen):\n{description}"
+    lines = [f"Ejemplo {index} ({entry.source}):", entry.text]
+    if entry.notes:
+        lines.append(f"[Estilo: {entry.notes}]")
+    return "\n".join(lines)
 
 
 class PromptBuilder:

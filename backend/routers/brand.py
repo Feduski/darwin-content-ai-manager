@@ -1,20 +1,14 @@
 from datetime import datetime
-from pathlib import Path
 from typing import List, Optional
-from uuid import uuid4
 
-import aiofiles
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models.models import BrandConfig, BrandCorpus, ItemType
+from models.models import BrandConfig, BrandCorpus
 
 router = APIRouter()
-
-UPLOAD_DIR = Path(__file__).parent.parent.parent / "storage" / "uploads"
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -33,10 +27,20 @@ class BrandConfigUpdate(BaseModel):
 class CorpusItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    type: str
-    content: str
-    style_description: Optional[str] = None
+    source: str
+    source_url: Optional[str] = None
+    text: str
+    image_path: Optional[str] = None
+    notes: Optional[str] = None
     created_at: datetime
+
+
+class CorpusItemCreate(BaseModel):
+    source: str
+    source_url: Optional[str] = None
+    text: str
+    image_path: Optional[str] = None
+    notes: Optional[str] = None
 
 
 # ── Brand config ──────────────────────────────────────────────────────────────
@@ -67,35 +71,9 @@ def list_corpus(db: Session = Depends(get_db)):
     return db.query(BrandCorpus).order_by(BrandCorpus.created_at.desc()).all()
 
 
-@router.post("/corpus/text", response_model=CorpusItemOut)
-async def add_corpus_text(content: str = Form(...), db: Session = Depends(get_db)):
-    entry = BrandCorpus(type=ItemType.text, content=content)
-    db.add(entry)
-    db.commit()
-    db.refresh(entry)
-    return entry
-
-
-@router.post("/corpus/image", response_model=CorpusItemOut)
-async def add_corpus_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Fase 3+: agrega style_description vía visión. Por ahora sube sin análisis."""
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(status_code=415, detail="Tipo de imagen no soportado")
-
-    content = await file.read()
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    ext = Path(file.filename or "corpus").suffix or ".jpg"
-    filename = f"corpus_{uuid4().hex}{ext}"
-    dest = UPLOAD_DIR / filename
-
-    async with aiofiles.open(dest, "wb") as f:
-        await f.write(content)
-
-    entry = BrandCorpus(
-        type=ItemType.image,
-        content=f"storage/uploads/{filename}",
-        style_description=None,
-    )
+@router.post("/corpus", response_model=CorpusItemOut)
+def add_corpus_item(item: CorpusItemCreate, db: Session = Depends(get_db)):
+    entry = BrandCorpus(**item.model_dump())
     db.add(entry)
     db.commit()
     db.refresh(entry)
