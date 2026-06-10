@@ -40,21 +40,24 @@ class PromptBuilder:
                 f"## Preferencias aprendidas del usuario\n{brand_config.feedback_summary}"
             )
 
-        output_instruction = {
-            "text": "Generá únicamente texto para el post (caption/copy).",
-            "image": "Generá únicamente un prompt detallado para generar la imagen del post.",
-            "both": (
-                "Generá: 1) el texto del post (caption/copy), "
-                "2) un prompt detallado para generar la imagen."
-            ),
-        }.get(output_type, "Generá el contenido del post.")
-
         sections.append(f"## Concepto de inspiración\n{concept}")
 
         if user_comment:
             sections.append(f"## Indicación adicional del usuario\n{user_comment}")
 
-        sections.append(f"## Tarea\n{output_instruction}")
+        if output_type == "image":
+            sections.append(
+                "## Tarea\n"
+                "Generá únicamente un prompt detallado en inglés para generar la imagen del post. "
+                "Sin explicaciones adicionales."
+            )
+        elif output_type == "both":
+            sections.append(
+                "## Tarea\n"
+                "Generá dos bloques separados por '---':\n"
+                "1. El texto del post, listo para publicar.\n"
+                "2. Un prompt detallado en inglés para generar la imagen."
+            )
 
         return "\n\n".join(sections)
 

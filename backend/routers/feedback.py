@@ -11,7 +11,12 @@ from services.feedback_synthesizer import FeedbackSynthesizer
 
 router = APIRouter()
 
-SYNTHESIZE_EVERY = 5   # re-sintetizar cada N decisiones acumuladas
+SYNTHESIZE_EVERY = 5
+
+
+class FeedbackOut(BaseModel):
+    generation_id: int
+    status: str
 
 
 class FeedbackRequest(BaseModel):
@@ -27,7 +32,7 @@ class FeedbackRequest(BaseModel):
         return v
 
 
-@router.post("/feedback")
+@router.post("/feedback", response_model=FeedbackOut)
 async def submit_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
     gen = db.query(Generation).filter(Generation.id == request.generation_id).first()
     if not gen:
@@ -54,7 +59,7 @@ async def submit_feedback(request: FeedbackRequest, db: Session = Depends(get_db
     if decided_count % SYNTHESIZE_EVERY == 0:
         await _run_synthesis(db)
 
-    return {"generation_id": gen.id, "status": gen.status}
+    return FeedbackOut(generation_id=gen.id, status=gen.status.value)
 
 
 async def _run_synthesis(db: Session) -> None:

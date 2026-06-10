@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from database import engine, SessionLocal, Base
 from models.models import BrandCorpus, BrandConfig
+from main import BRAND_BASE_PROMPT
 
 CORPUS_FILE = ROOT / "corpus_inicial" / "corpus-data.json"
 
@@ -20,16 +21,13 @@ def seed(reset: bool = False):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # Seed BrandConfig singleton si no existe
-        if not db.query(BrandConfig).first():
-            db.add(BrandConfig(
-                prompt_base=(
-                    "Sos un experto en contenido de marca. "
-                    "Tomá la inspiración recibida, identificá el concepto central "
-                    "y generá un post adaptado al estilo y voz de nuestra empresa. "
-                    "Editá este prompt desde /brand > Settings."
-                )
-            ))
+        config = db.query(BrandConfig).first()
+        if not config:
+            db.add(BrandConfig(prompt_base=BRAND_BASE_PROMPT))
+            db.commit()
+        else:
+            # Actualizar el prompt aunque ya exista
+            config.prompt_base = BRAND_BASE_PROMPT
             db.commit()
 
         if reset:
@@ -40,19 +38,28 @@ def seed(reset: bool = False):
         data = json.loads(CORPUS_FILE.read_text(encoding="utf-8"))
         posts = data["brand_corpus"]
         inserted = 0
+        skipped = 0
+        existing_urls = {
+            url for (url,) in db.query(BrandCorpus.source_url).all() if url
+        }
         for post in posts:
-            entry = BrandCorpus(
+            url = post.get("source_url")
+            if url and url in existing_urls:
+                skipped += 1
+                continue
+            db.add(BrandCorpus(
                 source=post["source"],
-                source_url=post.get("source_url"),
+                source_url=url,
                 text=post["text"],
                 image_path=post.get("image_file"),
                 notes=post.get("notes") or None,
-            )
-            db.add(entry)
+            ))
+            if url:
+                existing_urls.add(url)
             inserted += 1
 
         db.commit()
-        print(f"  Seed completo: {inserted} posts cargados en brand_corpus.")
+        print(f"  Seed completo: {inserted} insertados, {skipped} ya existían.")
     finally:
         db.close()
 

@@ -105,16 +105,24 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
 
     # Generar texto
     output_text: Optional[str] = None
+    image_generation_prompt: Optional[str] = None
     if text_provider is not None:
         try:
-            output_text = await text_provider.complete(prompt)
+            raw = await text_provider.complete(prompt)
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"Error al generar texto: {e}")
+
+        if request.output_type == "both" and "---" in raw:
+            parts = raw.split("---", 1)
+            output_text = parts[0].strip()
+            image_generation_prompt = parts[1].strip()
+        else:
+            output_text = raw.strip()
 
     # Generar imagen
     output_image_path: Optional[str] = None
     if image_provider is not None:
-        image_prompt = output_text or concept
+        image_prompt = image_generation_prompt or output_text or concept
         try:
             output_image_path = await image_provider.generate_image(image_prompt, GENERATED_DIR)
         except Exception as e:

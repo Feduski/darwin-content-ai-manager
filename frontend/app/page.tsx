@@ -120,10 +120,66 @@ function InspoItemCard({
 
 // ── ResultCard ────────────────────────────────────────────────────────────────
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button
+      onClick={copy}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 hover:text-zinc-100 transition-colors"
+    >
+      {copied ? (
+        <>
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-emerald-400">Copiado</span>
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copiar
+        </>
+      )}
+    </button>
+  );
+}
+
+function SaveButton({ text, filename }: { text: string; filename: string }) {
+  function save() {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  return (
+    <button
+      onClick={save}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 hover:text-zinc-100 transition-colors"
+    >
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      Guardar
+    </button>
+  );
+}
+
 function ResultCard({ generation, onFeedback }: { generation: Generation; onFeedback: (d: "approved" | "rejected", r?: string) => void }) {
   const [showReject, setShowReject] = useState(false);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const saveFilename = `darwin-post-${generation.id}-${new Date(generation.created_at).toISOString().slice(0, 10)}.txt`;
 
   if (generation.status !== "pending") {
     return (
@@ -157,6 +213,12 @@ function ResultCard({ generation, onFeedback }: { generation: Generation; onFeed
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`http://localhost:8000/${generation.output_image_path}`} alt="Imagen generada" className="rounded-lg w-full object-cover max-h-96" />
       )}
+      {generation.output_text && (
+        <div className="flex gap-2 pt-1">
+          <CopyButton text={generation.output_text} />
+          <SaveButton text={generation.output_text} filename={saveFilename} />
+        </div>
+      )}
       {showReject && (
         <textarea
           value={reason}
@@ -180,6 +242,8 @@ function ResultCard({ generation, onFeedback }: { generation: Generation; onFeed
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+const CACHE_KEY = "darwin_last_result";
+
 export default function HomePage() {
   const [items, setItems] = useState<InspoItem[]>([newTextItem()]);
   const [showComment, setShowComment] = useState(false);
@@ -187,7 +251,14 @@ export default function HomePage() {
   const [outputType, setOutputType] = useState<OutputType>("text");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<Generation | null>(null);
+  const [result, setResult] = useState<Generation | null>(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const updateItem = useCallback((id: string, patch: Partial<InspoItem>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
@@ -197,19 +268,27 @@ export default function HomePage() {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
+  function setAndCacheResult(gen: Generation | null) {
+    setResult(gen);
+    try {
+      if (gen) localStorage.setItem(CACHE_KEY, JSON.stringify(gen));
+      else localStorage.removeItem(CACHE_KEY);
+    } catch { /* storage lleno o modo privado */ }
+  }
+
   async function handleGenerate() {
     const valid = items.filter((i) => i.content.trim());
     if (!valid.length) { setError("Agregá al menos un item de inspiración con contenido."); return; }
     setLoading(true);
     setError(null);
-    setResult(null);
+    setAndCacheResult(null);
     try {
       const gen = await generatePost({
         inspo_items: valid.map((i) => ({ type: i.type, content: i.content })),
         user_comment: comment.trim() || undefined,
         output_type: outputType,
       }) as Generation;
-      setResult(gen);
+      setAndCacheResult(gen);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al generar");
     } finally {
@@ -221,7 +300,8 @@ export default function HomePage() {
     if (!result) return;
     try {
       await submitFeedback(result.id, decision, reason);
-      setResult({ ...result, status: decision });
+      const updated = { ...result, status: decision };
+      setAndCacheResult(updated);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al enviar feedback");
     }
