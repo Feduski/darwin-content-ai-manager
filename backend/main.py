@@ -1,12 +1,19 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 load_dotenv()
+
+# Rutas absolutas para que funcionen sin importar desde dónde se inicia uvicorn
+ROOT = Path(__file__).parent.parent
+STORAGE_UPLOADS = ROOT / "storage" / "uploads"
+STORAGE_GENERATED = ROOT / "storage" / "generated"
+STORAGE_UPLOADS.mkdir(parents=True, exist_ok=True)
+STORAGE_GENERATED.mkdir(parents=True, exist_ok=True)
 
 from database import engine, SessionLocal, Base
 from models.models import BrandConfig
@@ -17,10 +24,6 @@ from routers import inspo, generate, feedback, brand
 async def lifespan(app: FastAPI):
     # Create tables
     Base.metadata.create_all(bind=engine)
-
-    # Ensure storage dirs exist
-    Path("../storage/uploads").mkdir(parents=True, exist_ok=True)
-    Path("../storage/generated").mkdir(parents=True, exist_ok=True)
 
     # Seed brand_config singleton
     db = SessionLocal()
@@ -53,10 +56,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve generated images statically
+# Serve generated images statically (absolute path, dirs ya creados arriba)
 app.mount(
     "/storage/generated",
-    StaticFiles(directory="../storage/generated"),
+    StaticFiles(directory=str(STORAGE_GENERATED)),
     name="generated",
 )
 

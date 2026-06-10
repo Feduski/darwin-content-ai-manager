@@ -1,10 +1,11 @@
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 from uuid import uuid4
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -16,20 +17,29 @@ UPLOAD_DIR = Path(__file__).parent.parent.parent / "storage" / "uploads"
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
-# ── Brand config ────────────────────────────────────────────────────────────
+# ── Schemas ───────────────────────────────────────────────────────────────────
 
 class BrandConfigOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     prompt_base: str
-    feedback_summary: Optional[str]
-
-    class Config:
-        from_attributes = True
+    feedback_summary: Optional[str] = None
 
 
 class BrandConfigUpdate(BaseModel):
     prompt_base: str
 
+
+class CorpusItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    type: str
+    content: str
+    style_description: Optional[str] = None
+    created_at: datetime
+
+
+# ── Brand config ──────────────────────────────────────────────────────────────
 
 @router.get("/config", response_model=BrandConfigOut)
 def get_brand_config(db: Session = Depends(get_db)):
@@ -50,18 +60,15 @@ def update_brand_config(update: BrandConfigUpdate, db: Session = Depends(get_db)
     return config
 
 
-# ── Brand corpus ─────────────────────────────────────────────────────────────
+# ── Brand corpus ──────────────────────────────────────────────────────────────
 
-@router.get("/corpus")
+@router.get("/corpus", response_model=List[CorpusItemOut])
 def list_corpus(db: Session = Depends(get_db)):
     return db.query(BrandCorpus).order_by(BrandCorpus.created_at.desc()).all()
 
 
-@router.post("/corpus/text")
-async def add_corpus_text(
-    content: str = Form(...),
-    db: Session = Depends(get_db),
-):
+@router.post("/corpus/text", response_model=CorpusItemOut)
+async def add_corpus_text(content: str = Form(...), db: Session = Depends(get_db)):
     entry = BrandCorpus(type=ItemType.text, content=content)
     db.add(entry)
     db.commit()
@@ -69,15 +76,9 @@ async def add_corpus_text(
     return entry
 
 
-@router.post("/corpus/image")
-async def add_corpus_image(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-):
-    """
-    Fase 3+: analiza la imagen con visión y guarda style_description.
-    Por ahora sube la imagen y guarda la ruta sin análisis.
-    """
+@router.post("/corpus/image", response_model=CorpusItemOut)
+async def add_corpus_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Fase 3+: agrega style_description vía visión. Por ahora sube sin análisis."""
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Tipo de imagen no soportado")
 
@@ -93,7 +94,7 @@ async def add_corpus_image(
     entry = BrandCorpus(
         type=ItemType.image,
         content=f"storage/uploads/{filename}",
-        style_description=None,  # se llenará con visión en Fase 3
+        style_description=None,
     )
     db.add(entry)
     db.commit()
