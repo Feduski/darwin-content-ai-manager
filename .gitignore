@@ -28,3 +28,5 @@ storage/generated/*
 # OS
 .DS_Store
 Thumbs.db
+
+/corpus_inicial/linkedln/prueba1_inspo.jpg
