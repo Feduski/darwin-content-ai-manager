@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# Env
+.env
+
+# DB y storage (rutas guardadas en DB, archivos locales)
+data/app.db
+storage/uploads/*
+storage/generated/*
+!storage/uploads/.gitkeep
+!storage/generated/.gitkeep
+!data/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
