@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { InspoItem, OutputType, Generation } from "@/lib/types";
 import { uploadInspoImage, generatePost, submitFeedback } from "@/lib/api";
 
@@ -251,14 +251,15 @@ export default function HomePage() {
   const [outputType, setOutputType] = useState<OutputType>("text");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<Generation | null>(() => {
+  const [result, setResult] = useState<Generation | null>(null);
+
+  // Leer cache solo en el cliente (post-hydration) para evitar mismatch SSR
+  useEffect(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
-      return cached ? JSON.parse(cached) : null;
-    } catch {
-      return null;
-    }
-  });
+      if (cached) setResult(JSON.parse(cached));
+    } catch { /* storage bloqueado o modo privado */ }
+  }, []);
 
   const updateItem = useCallback((id: string, patch: Partial<InspoItem>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
